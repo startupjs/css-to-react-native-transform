@@ -166,7 +166,6 @@ const transform = (css, options) => {
 
   if (result.__exportProps) {
     Object.assign(result, result.__exportProps);
-    delete result.__exportProps;
   }
 
   return result;
