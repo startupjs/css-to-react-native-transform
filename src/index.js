@@ -17,7 +17,7 @@ const viewportUnitRe = /^([+-]?[0-9.]+)(vh|vw|vmin|vmax)$/;
 const percentRe = /^([+-]?(?:\d*\.)?\d+(?:[Ee][+-]?\d+)?%)$/;
 const unsupportedUnitRe = /^([+-]?(?:\d*\.)?\d+(?:[Ee][+-]?\d+)?(ch|em|ex|cm|mm|in|pc|pt))$/;
 const cssPartRe = /::?part\(([^)]+)\)/;
-const rootRe = /:root/
+const rootRe = /:root/;
 const shorthandBorderProps = [
   "border-radius",
   "border-width",
