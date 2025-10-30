@@ -103,8 +103,7 @@ const transform = (css, options) => {
       if (
         rootRe.test(rule.selectors[s])
           ? false
-          : (
-            rule.selectors[s].indexOf(".") !== 0 ||
+          : rule.selectors[s].indexOf(".") !== 0 ||
             (rule.selectors[s].indexOf(":") !== -1 &&
               (options != null && options.parsePartSelectors
                 ? !cssPartRe.test(rule.selectors[s])
@@ -114,7 +113,13 @@ const transform = (css, options) => {
             rule.selectors[s].indexOf(">") !== -1 ||
             rule.selectors[s].indexOf("+") !== -1 ||
             rule.selectors[s].indexOf(" ") !== -1
-          )
+      ) {
+        continue;
+      }
+
+      if (
+        typeof options?.ignoreRule === "function" &&
+        options.ignoreRule(rule.selectors[s]) === true
       ) {
         continue;
       }
@@ -163,6 +168,13 @@ const transform = (css, options) => {
       for (const r in rule.rules) {
         const ruleRule = rule.rules[r];
         for (const s in ruleRule.selectors) {
+          if (
+            typeof options?.ignoreRule === "function" &&
+            options.ignoreRule(ruleRule.selectors[s]) === true
+          ) {
+            continue;
+          }
+
           result[media] = result[media] || {};
           const selector = ruleRule.selectors[s].replace(/^\./, "");
           const mediaStyles = (result[media][selector] =
