@@ -9,15 +9,10 @@ describe("misc", () => {
     expect(
       transform(`
       .test {
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        z-index: 0
       }
-    `),
-    ).toEqual({
-      test: { top: 0, left: 0, right: 0, bottom: 0 },
-    });
+      `),
+    ).toEqual({ test: { zIndex: 0 } });
   });
 
   it("ignores unsupported at-rules", () => {
@@ -138,6 +133,27 @@ describe("misc", () => {
     ).toEqual({
       test: {
         borderRadius: -1.5,
+      },
+    });
+  });
+
+  it("allows uppercase units", () => {
+    expect(
+      transform(`
+      .test {
+        top: 0PX
+      }
+      `),
+    ).toEqual({ test: { top: 0 } });
+    expect(
+      transform(`
+      .test {
+        transform: rotate(30DEG)
+      }
+      `),
+    ).toEqual({
+      test: {
+        transform: [{ rotate: "30deg" }],
       },
     });
   });
@@ -770,6 +786,22 @@ describe("transform", () => {
 });
 
 describe("border", () => {
+  it("transforms border none", () => {
+    expect(
+      transform(`
+      .test {
+        border: none
+      }
+      `),
+    ).toEqual({
+      test: {
+        borderWidth: 0,
+        borderColor: "black",
+        borderStyle: "solid",
+      },
+    });
+  });
+
   it("transforms border shorthand", () => {
     expect(
       transform(`
@@ -864,6 +896,32 @@ describe("border", () => {
     ).toEqual({
       test: { borderWidth: 2, borderColor: "black", borderStyle: "solid" },
     });
+  });
+
+  it("transforms border for unsupported units", () => {
+    expect(
+      transform(`
+      .test {
+        border: 3em solid black
+      }
+      `),
+    ).toEqual({
+      test: {
+        borderWidth: "3em",
+        borderColor: "black",
+        borderStyle: "solid",
+      },
+    });
+  });
+
+  it("does not transform border with percentage width", () => {
+    expect(() =>
+      transform(`
+      .test {
+        border: 3% solid black
+      }
+      `),
+    ).toThrow();
   });
 
   describe("shorthand border properties related to Image elements", () => {
@@ -1116,6 +1174,18 @@ describe("font", () => {
     `),
     ).toEqual({
       test: { fontVariant: ["tabular-nums"] },
+    });
+  });
+
+  it("transforms multiple font variant as an array", () => {
+    expect(
+      transform(`
+      .test {
+        font-variant: tabular-nums oldstyle-nums;
+      }
+      `),
+    ).toEqual({
+      test: { fontVariant: ["tabular-nums", "oldstyle-nums"] },
     });
   });
 });
@@ -1746,6 +1816,38 @@ describe("flex-box", () => {
     });
   });
 
+  it("transforms flex shorthand with flex-basis set to percent", () => {
+    expect(
+      transform(`
+      .test {
+        flex: 1 2 30%
+      }
+      `),
+    ).toEqual({
+      test: {
+        flexGrow: 1,
+        flexShrink: 2,
+        flexBasis: "30%",
+      },
+    });
+  });
+
+  it("transforms flex shorthand with flex-basis set to unsupported unit", () => {
+    expect(
+      transform(`
+      .test {
+        flex: 1 2 30em
+      }
+      `),
+    ).toEqual({
+      test: {
+        flexGrow: 1,
+        flexShrink: 2,
+        flexBasis: "30em",
+      },
+    });
+  });
+
   it("transforms flex shorthand with flex-basis set to auto appearing first", () => {
     expect(
       transform(`
@@ -1981,23 +2083,14 @@ describe("font", () => {
     });
   });
 
-  it("allows line height as multiple", () => {
-    expect(
+  it("does not allow line height as multiple", () => {
+    expect(() => {
       transform(`
       .test {
-        font: 16px/1.5 "Helvetica";
+        font: 16px/1.5 "Helvetica"
       }
-    `),
-    ).toEqual({
-      test: {
-        fontFamily: "Helvetica",
-        fontSize: 16,
-        fontWeight: "normal",
-        fontStyle: "normal",
-        fontVariant: [],
-        lineHeight: 24,
-      },
-    });
+      `);
+    }).toThrow();
   });
 
   it("transforms font without quotes", () => {
@@ -2455,6 +2548,46 @@ describe("text-shadow", () => {
   });
 });
 
+it("transforms place content", () => {
+  expect(
+    transform(`
+    .test {
+      place-content: center center
+    }
+    `),
+  ).toEqual({
+    test: {
+      alignContent: "center",
+      justifyContent: "center",
+    },
+  });
+});
+
+it("transforms place content with one value", () => {
+  expect(
+    transform(`
+    .test {
+      place-content: center
+    }
+    `),
+  ).toEqual({
+    test: {
+      alignContent: "center",
+      justifyContent: "stretch",
+    },
+  });
+});
+
+it("does not allow justify content without align content", () => {
+  expect(() =>
+    transform(`
+    .test {
+      place-content: space-evenly
+    }
+    `),
+  ).toThrow();
+});
+
 describe("rem unit", () => {
   it("should transform a single rem value", () => {
     expect(
@@ -2533,6 +2666,81 @@ describe("rem unit", () => {
       test2: {
         borderRadius: 9,
       },
+    });
+  });
+});
+
+describe("ignoreRule option", () => {
+  it("should allow to ignore a selector completely", () => {
+    expect(
+      transform(
+        `
+      .foo {
+        color: red;
+      }
+      .bar {
+        font-size: 12px;
+      }
+    `,
+        {
+          ignoreRule: selector => {
+            if (selector === ".foo") {
+              return true;
+            }
+          },
+        },
+      ),
+    ).toEqual({
+      bar: { fontSize: 12 },
+    });
+  });
+
+  it("should do nothing when returing false", () => {
+    expect(
+      transform(
+        `
+        .foo {
+          color: red;
+        }
+        .bar {
+          font-size: 12px;
+        }
+    `,
+        {
+          ignoreRule: selector => {
+            if (selector === ".bar") {
+              return false;
+            }
+            if (selector === ".foo") {
+              return false;
+            }
+          },
+        },
+      ),
+    ).toEqual({
+      bar: { fontSize: 12 },
+      foo: { color: "red" },
+    });
+  });
+
+  it("should not error out even if ignoreRule is not a function", () => {
+    expect(
+      transform(
+        `
+        .foo {
+          color: red;
+        }
+        .bar {
+          font-size: 12px;
+        }
+      `,
+        {
+          ignoreRule: true,
+        },
+      ),
+    ).toEqual({
+      bar: { fontSize: 12 },
+      foo: { color: "red" },
     });
   });
 });
@@ -3058,6 +3266,48 @@ describe("media queries", () => {
       container: { backgroundColor: "#f00" },
       "@media (orientation: portrait), (orientation: landscape)": {
         container: { backgroundColor: "#00f" },
+      },
+    });
+  });
+
+  it("should support media queries + ignoreRule option", () => {
+    expect(
+      transform(
+        `
+        .container {
+          background-color: #f00;
+        }
+
+        @media (orientation: landscape) {
+          .container {
+            background-color: #00f;
+          }
+        }
+        `,
+        {
+          ignoreRule: selector => {
+            if (selector === ".container") {
+              return true;
+            }
+          },
+          parseMediaQueries: true,
+        },
+      ),
+    ).toEqual({
+      __mediaQueries: {
+        "@media (orientation: landscape)": [
+          {
+            expressions: [
+              {
+                feature: "orientation",
+                modifier: undefined,
+                value: "landscape",
+              },
+            ],
+            inverse: false,
+            type: "all",
+          },
+        ],
       },
     });
   });
