@@ -1,5 +1,5 @@
 import mediaQuery from "css-mediaquery";
-import transformCSS from "css-to-react-native";
+import transformCSS from "@cssxjs/css-to-react-native";
 import parseCSS from "css/lib/parse";
 import {
   dimensionFeatures,
