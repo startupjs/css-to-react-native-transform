@@ -25,7 +25,54 @@ const shorthandBorderProps = [
   "border-style",
 ];
 
-const transformDecls = (styles, declarations, result) => {
+/**
+ * Extracts @keyframes from CSS and returns the cleaned CSS and keyframes object
+ * @param {string} css - The input CSS string
+ * @returns {{css: string, keyframes: Object}} - Cleaned CSS and keyframes object
+ */
+const extractKeyframes = (css) => {
+  const keyframes = {};
+  let cleanedCss = css;
+
+  // Find @keyframes by manually parsing to handle nested braces
+  let index = 0;
+  while (index < css.length) {
+    const keyframesMatch = css.slice(index).match(/@keyframes\s+([^\s{]+)\s*{/);
+    if (!keyframesMatch) break;
+
+    const startIndex = index + keyframesMatch.index;
+    const nameEndIndex = startIndex + keyframesMatch[0].length;
+    const name = keyframesMatch[1];
+
+    // Find the matching closing brace
+    let braceCount = 1;
+    let currentIndex = nameEndIndex;
+    while (currentIndex < css.length && braceCount > 0) {
+      if (css[currentIndex] === '{') {
+        braceCount++;
+      } else if (css[currentIndex] === '}') {
+        braceCount--;
+      }
+      currentIndex++;
+    }
+
+    if (braceCount === 0) {
+      // Extract the body (without the outer braces)
+      const body = css.slice(nameEndIndex, currentIndex - 1).trim();
+      keyframes[name] = body;
+
+      // Mark for removal by replacing with spaces to maintain positions
+      const fullKeyframe = css.slice(startIndex, currentIndex);
+      cleanedCss = cleanedCss.replace(fullKeyframe, '');
+    }
+
+    index = currentIndex;
+  }
+
+  return { css: cleanedCss, keyframes };
+};
+
+const transformDecls = (styles, declarations, result, keyframes) => {
   for (const d in declarations) {
     const declaration = declarations[d];
     if (declaration.type !== "declaration") continue;
@@ -64,6 +111,17 @@ const transformDecls = (styles, declarations, result) => {
       } else {
         Object.assign(styles, transformed);
       }
+    } else if (['animation', 'animation-name'].includes(property) && keyframes && Object.keys(keyframes).length > 0) {
+      // Pass all keyframes to transformCSS - it will figure out which ones to use
+      const keyframeDeclarations = [];
+      for (const name in keyframes) {
+        keyframeDeclarations.push(['@keyframes ' + name, keyframes[name]]);
+      }
+      const transformed = transformCSS([
+        ...keyframeDeclarations,
+        [property, value]
+      ]);
+      Object.assign(styles, transformed);
     } else {
       Object.assign(styles, transformCSS([[property, value]]));
     }
@@ -71,6 +129,12 @@ const transformDecls = (styles, declarations, result) => {
 };
 
 const transform = (css, options) => {
+  // Extract keyframes and store them separately, before parsing (remove them from css)
+  let keyframes;
+  if (options?.parseKeyframes) {
+    ({ css, keyframes } = extractKeyframes(css));
+  }
+
   const { stylesheet } = parseCSS(css);
   const rules = sortRules(stylesheet.rules);
 
@@ -126,7 +190,7 @@ const transform = (css, options) => {
 
       const selector = rule.selectors[s].replace(/^\./, "");
       const styles = (result[selector] = result[selector] || {});
-      transformDecls(styles, rule.declarations, result);
+      transformDecls(styles, rule.declarations, result, keyframes);
     }
 
     if (
@@ -179,14 +243,18 @@ const transform = (css, options) => {
           const selector = ruleRule.selectors[s].replace(/^\./, "");
           const mediaStyles = (result[media][selector] =
             result[media][selector] || {});
-          transformDecls(mediaStyles, ruleRule.declarations, result);
+          transformDecls(mediaStyles, ruleRule.declarations, result, keyframes);
         }
       }
     }
   }
 
   if (result.__exportProps) {
-    Object.assign(result, result.__exportProps);
+    if (Object.keys(result.__exportProps).length === 0) {
+      delete result.__exportProps;
+    } else {
+      Object.assign(result, result.__exportProps);
+    }
   }
 
   return result;
