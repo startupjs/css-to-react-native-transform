@@ -268,10 +268,7 @@ describe("misc", () => {
         fontSize: 18,
         textAlign: "center",
         color: "#656656",
-        shadowColor: "#fff",
-        shadowOffset: { height: 20, width: 10 },
-        shadowRadius: 30,
-        shadowOpacity: 1,
+        boxShadow: "10px 20px 30px #fff",
       },
       container: {
         paddingBottom: 30,
@@ -2210,7 +2207,7 @@ describe("font", () => {
 });
 
 describe("box-shadow", () => {
-  it("transforms box-shadow into shadow- properties", () => {
+  it("transforms box-shadow", () => {
     expect(
       transform(`
       .test {
@@ -2219,10 +2216,7 @@ describe("box-shadow", () => {
     `),
     ).toEqual({
       test: {
-        shadowOffset: { width: 10, height: 20 },
-        shadowRadius: 30,
-        shadowColor: "red",
-        shadowOpacity: 1,
+        boxShadow: "10px 20px 30px red",
       },
     });
     expect(
@@ -2233,10 +2227,7 @@ describe("box-shadow", () => {
     `),
     ).toEqual({
       test: {
-        shadowOffset: { width: 10, height: 20 },
-        shadowRadius: 30,
-        shadowColor: "#f00",
-        shadowOpacity: 1,
+        boxShadow: "10px 20px 30px #f00",
       },
     });
   });
@@ -2250,10 +2241,7 @@ describe("box-shadow", () => {
     `),
     ).toEqual({
       test: {
-        shadowOffset: { width: 10, height: 20 },
-        shadowRadius: 30,
-        shadowColor: "rgb(100, 100, 100)",
-        shadowOpacity: 1,
+        boxShadow: "10px 20px 30px rgb(100, 100, 100)",
       },
     });
   });
@@ -2267,10 +2255,7 @@ describe("box-shadow", () => {
     `),
     ).toEqual({
       test: {
-        shadowOffset: { width: 10, height: 20 },
-        shadowRadius: 30,
-        shadowColor: "rgba(100, 100, 100, 0.5)",
-        shadowOpacity: 1,
+        boxShadow: "10px 20px 30px rgba(100, 100, 100, 0.5)",
       },
     });
   });
@@ -2284,10 +2269,7 @@ describe("box-shadow", () => {
     `),
     ).toEqual({
       test: {
-        shadowOffset: { width: 10, height: 20 },
-        shadowRadius: 30,
-        shadowColor: "hsl(120, 100%, 50%)",
-        shadowOpacity: 1,
+        boxShadow: "10px 20px 30px hsl(120, 100%, 50%)",
       },
     });
   });
@@ -2301,15 +2283,12 @@ describe("box-shadow", () => {
     `),
     ).toEqual({
       test: {
-        shadowOffset: { width: 10, height: 20 },
-        shadowRadius: 30,
-        shadowColor: "hsla(120, 100%, 50%, 0.7)",
-        shadowOpacity: 1,
+        boxShadow: "10px 20px 30px hsla(120, 100%, 50%, 0.7)",
       },
     });
   });
 
-  it("trims values", () => {
+  it("preserves spacing in values", () => {
     expect(
       transform(`
       .test {
@@ -2318,10 +2297,7 @@ describe("box-shadow", () => {
     `),
     ).toEqual({
       test: {
-        shadowOffset: { width: 10, height: 20 },
-        shadowRadius: 30,
-        shadowColor: "#f00",
-        shadowOpacity: 1,
+        boxShadow: "10px   20px   30px   #f00",
       },
     });
   });
@@ -2335,10 +2311,7 @@ describe("box-shadow", () => {
     `),
     ).toEqual({
       test: {
-        shadowOffset: { width: 0, height: 0 },
-        shadowRadius: 1,
-        shadowColor: "red",
-        shadowOpacity: 1,
+        boxShadow: "0 0 1px red",
       },
     });
     expect(
@@ -2349,10 +2322,7 @@ describe("box-shadow", () => {
     `),
     ).toEqual({
       test: {
-        shadowOffset: { width: 0, height: 0 },
-        shadowRadius: 0,
-        shadowColor: "red",
-        shadowOpacity: 1,
+        boxShadow: "0 0 0 red",
       },
     });
     expect(
@@ -2363,10 +2333,7 @@ describe("box-shadow", () => {
     `),
     ).toEqual({
       test: {
-        shadowOffset: { width: 1, height: 1 },
-        shadowRadius: 0,
-        shadowColor: "#00f",
-        shadowOpacity: 1,
+        boxShadow: "1px 1px 0 #00f",
       },
     });
   });
@@ -2380,10 +2347,7 @@ describe("box-shadow", () => {
     `),
     ).toEqual({
       test: {
-        shadowOffset: { width: 10, height: 20 },
-        shadowRadius: 0,
-        shadowColor: "red",
-        shadowOpacity: 1,
+        boxShadow: "10px 20px red",
       },
     });
   });
@@ -2397,10 +2361,7 @@ describe("box-shadow", () => {
     `),
     ).toEqual({
       test: {
-        shadowOffset: { width: 10, height: 20 },
-        shadowRadius: 30,
-        shadowColor: "black",
-        shadowOpacity: 1,
+        boxShadow: "10px 20px 30px",
       },
     });
   });
@@ -2414,71 +2375,11 @@ describe("box-shadow", () => {
     `),
     ).toEqual({
       test: {
-        shadowOffset: { width: 10, height: 20 },
-        shadowRadius: 0,
-        shadowColor: "black",
-        shadowOpacity: 1,
+        boxShadow: "10px 20px",
       },
     });
   });
 
-  it("transforms box-shadow enforces offset to be present", () => {
-    expect(() => {
-      transform(`
-      .test {
-        box-shadow: red;
-      }
-    `);
-    }).toThrowError('Failed to parse declaration "boxShadow: red"');
-  });
-
-  it("transforms box-shadow and throws if multiple colors are used", () => {
-    expect(() => {
-      transform(`
-      .test {
-        box-shadow: 0 0 0 red yellow green blue;
-      }
-    `);
-    }).toThrowError(
-      'Failed to parse declaration "boxShadow: 0 0 0 red yellow green blue"',
-    );
-  });
-
-  it("transforms box-shadow and enforces offset-y if offset-x present", () => {
-    expect(() => {
-      transform(`
-      .test {
-        box-shadow: 10px;
-      }
-    `);
-    }).toThrowError('Failed to parse declaration "boxShadow: 10px"');
-  });
-
-  it("transforms box-shadow and enforces units for non 0 values", () => {
-    expect(() => {
-      transform(`
-      .test {
-        box-shadow: 10 20px 30px #f00;
-      }
-    `);
-    }).toThrowError(
-      'Failed to parse declaration "boxShadow: 10 20px 30px #f00"',
-    );
-    expect(() => {
-      transform(`
-      .test {
-        box-shadow: 10px 20;
-      }
-    `);
-    }).toThrowError('Failed to parse declaration "boxShadow: 10px 20"');
-    expect(() => {
-      transform(`
-      .test {
-        box-shadow: 20;
-      }
-    `);
-    }).toThrowError('Failed to parse declaration "boxShadow: 20"');
-  });
 });
 
 describe("text-shadow", () => {
@@ -2627,10 +2528,7 @@ describe("rem unit", () => {
         transform: [{ translateY: 32 }, { translateX: 16 }],
       },
       test2: {
-        shadowColor: "#fff",
-        shadowOffset: { height: 32, width: 16 },
-        shadowRadius: 48,
-        shadowOpacity: 1,
+        boxShadow: "16px 32px 48px #fff",
       },
     });
   });
@@ -3471,6 +3369,10 @@ describe("ICSS :export pseudo-selector", () => {
       }
     `),
     ).toEqual({
+      __exportProps: {
+        whitecolor: "#fcf5ed",
+        test: "1px",
+      },
       whitecolor: "#fcf5ed",
       test: "1px",
     });
@@ -3497,6 +3399,11 @@ describe("ICSS :export pseudo-selector", () => {
       bar: {
         color: "blue",
       },
+      __exportProps: {
+        blackColor: "#000",
+        whitecolor: "#fcf5ed",
+        test: "1px",
+      },
       blackColor: "#000",
       whitecolor: "#fcf5ed",
       test: "1px",
@@ -3518,6 +3425,9 @@ describe("ICSS :export pseudo-selector", () => {
       bar: {
         color: "blue",
       },
+      __exportProps: {
+        blackColor: "something is something",
+      },
       blackColor: "something is something",
     });
   });
@@ -3538,6 +3448,10 @@ describe("ICSS :export pseudo-selector", () => {
       bar: {
         color: "blue",
       },
+      __exportProps: {
+        foo: "something",
+        boo: "0",
+      },
       foo: "something",
       boo: "0",
     });
@@ -3552,6 +3466,10 @@ describe("ICSS :export pseudo-selector", () => {
       }
     `),
     ).toEqual({
+      __exportProps: {
+        whitecolor: "#fcf5ed",
+        WhiteColor: "#fff",
+      },
       whitecolor: "#fcf5ed",
       WhiteColor: "#fff",
     });
@@ -3573,6 +3491,11 @@ describe("ICSS :export pseudo-selector", () => {
     ).toEqual({
       foo: {
         color: "blue",
+      },
+      __exportProps: {
+        whitecolor: "#fcf5ed",
+        b: "0",
+        test: "1px",
       },
       whitecolor: "#fcf5ed",
       b: "0",
@@ -3613,6 +3536,9 @@ describe("ICSS :export pseudo-selector", () => {
       foo: {
         color: "blue",
       },
+      __exportProps: {
+        bar: "2",
+      },
       bar: "2",
     });
     expect(
@@ -3633,6 +3559,9 @@ describe("ICSS :export pseudo-selector", () => {
     ).toEqual({
       foo: {
         color: "blue",
+      },
+      __exportProps: {
+        bar: "2",
       },
       bar: "2",
     });
@@ -3655,6 +3584,10 @@ describe("ICSS :export pseudo-selector", () => {
     ).toEqual({
       foo: {
         color: "blue",
+      },
+      __exportProps: {
+        baz: "1",
+        bar: "2",
       },
       baz: "1",
       bar: "2",
@@ -3807,6 +3740,218 @@ describe("::part() selectors", () => {
       "container::part(input)": {
         backgroundColor: "#00f",
       },
+    });
+  });
+});
+
+describe("@keyframes rules", () => {
+  it("transforms @keyframes rules with animation property", () => {
+    expect(
+      transform(
+        `
+        .container {
+          animation: slidein 3s ease-in-out infinite;
+          background-color: #f00;
+        }
+
+        @keyframes slidein {
+          from {
+            transform: translateX(0%);
+          }
+          to {
+            transform: translateX(100%);
+          }
+        }
+        `,
+        {
+          parseKeyframes: true,
+        },
+      ),
+    ).toEqual({
+      container: {
+        animationName: {
+          from: { transform: [{ translateX: "0%" }] },
+          to: { transform: [{ translateX: "100%" }] },
+        },
+        animationDuration: '3s',
+        animationDelay: '0s',
+        animationDirection: 'normal',
+        animationFillMode: 'none',
+        animationPlayState: 'running',
+        animationTimingFunction: 'ease-in-out',
+        animationIterationCount: 'infinite',
+        backgroundColor: "#f00",
+      }
+    });
+  });
+
+  it("transforms animation-name property with @keyframes", () => {
+    expect(
+      transform(
+        `
+        .container {
+          animation-name: fadeIn;
+          animation-duration: 2s;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        `,
+        {
+          parseKeyframes: true,
+        },
+      ),
+    ).toEqual({
+      container: {
+        animationName: {
+          from: { opacity: 0 },
+          to: { opacity: 1 },
+        },
+        animationDuration: '2s',
+      }
+    });
+  });
+
+  it("transforms animation property without @keyframes", () => {
+    expect(
+      transform(
+        `
+        .container {
+          animation: slidein 3s ease-in-out infinite;
+          background-color: #f00;
+        }
+        `,
+        {
+          parseKeyframes: true,
+        },
+      ),
+    ).toEqual({
+      container: {
+        animationName: 'slidein',
+        animationDuration: '3s',
+        animationDelay: '0s',
+        animationDirection: 'normal',
+        animationFillMode: 'none',
+        animationPlayState: 'running',
+        animationTimingFunction: 'ease-in-out',
+        animationIterationCount: 'infinite',
+        backgroundColor: "#f00",
+      }
+    });
+  });
+
+  it("transforms animation-name property without @keyframes", () => {
+    expect(
+      transform(
+        `
+        .container {
+          animation-name: fadeIn;
+          animation-duration: 2s;
+        }
+        `,
+        {
+          parseKeyframes: true,
+        },
+      ),
+    ).toEqual({
+      container: {
+        animationName: 'fadeIn',
+        animationDuration: '2s',
+      }
+    });
+  });
+
+  it("transforms animation: none", () => {
+    expect(
+      transform(
+        `
+        .container {
+          animation: none;
+        }
+        `,
+        {
+          parseKeyframes: true,
+        },
+      ),
+    ).toEqual({
+      container: {
+        animationName: 'none',
+        animationDuration: '0s',
+        animationDelay: '0s',
+        animationDirection: 'normal',
+        animationFillMode: 'none',
+        animationPlayState: 'running',
+        animationTimingFunction: 'ease',
+        animationIterationCount: 1,
+      }
+    });
+  });
+
+  it("transforms multiple animations with unused keyframe", () => {
+    expect(
+      transform(
+        `
+        .container {
+          animation: slidein 2s, fadeIn 1s ease-in;
+        }
+
+        @keyframes slidein {
+          from {
+            transform: translateX(0%);
+          }
+          to {
+            transform: translateX(100%);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes unused {
+          from {
+            color: red;
+          }
+          to {
+            color: blue;
+          }
+        }
+        `,
+        {
+          parseKeyframes: true,
+        },
+      ),
+    ).toEqual({
+      container: {
+        animationName: [
+          {
+            from: { transform: [{ translateX: "0%" }] },
+            to: { transform: [{ translateX: "100%" }] },
+          },
+          {
+            from: { opacity: 0 },
+            to: { opacity: 1 },
+          }
+        ],
+        animationDuration: ['2s', '1s'],
+        animationDelay: ['0s', '0s'],
+        animationDirection: ['normal', 'normal'],
+        animationFillMode: ['none', 'none'],
+        animationPlayState: ['running', 'running'],
+        animationTimingFunction: ['ease', 'ease-in'],
+        animationIterationCount: [1, 1],
+      }
     });
   });
 });
